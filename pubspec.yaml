@@ -1,0 +1,31 @@
+name: frustchat
+description: A venting chat application.
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  # For database
+  sqflite: ^2.3.0
+  path: ^1.8.3
+  # For picking images for DPs
+  image_picker: ^1.0.4
+  # For formatting dates
+  intl: ^0.18.1
+  # For state management
+  provider: ^6.0.5
+  # For picking backup files
+  file_picker: ^6.1.1
+  # For saving/sharing the backup file
+  share_plus: ^7.2.1
+  # For JSON handling
+  path_provider: ^2.1.1
+  # For color picking in settings
+  flutter_colorpicker: ^1.0.3
+
+flutter:
+  uses-material-design: true
