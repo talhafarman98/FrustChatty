@@ -18,18 +18,8 @@ dependencies:
   share_plus: ^7.2.1
   path_provider: ^2.1.1
   flutter_colorpicker: ^1.0.3
-  # NEW ADDITIONS
   google_fonts: ^6.1.0
   animations: ^2.0.11
-
-dev_dependencies:
-  flutter_launcher_icons: "^0.13.1"
-
-flutter_launcher_icons:
-  android: "launcher_icon"
-  ios: true
-  image_path: "app_icon.png"
-  min_sdk_android: 21
 
 flutter:
   uses-material-design: true
