@@ -16,6 +16,18 @@ jobs:
         flutter-version: '3.19.0'
         channel: 'stable'
 
+    - name: Generate Missing Android Files
+      run: |
+        # 1. Hide your custom settings so Flutter can generate the system files
+        mv pubspec.yaml pubspec.hidden
+        
+        # 2. Force Flutter to create the missing 'android' folder
+        flutter create . --project-name frustchat --org com.talha.frustchat
+        
+        # 3. Bring back your custom settings
+        rm pubspec.yaml
+        mv pubspec.hidden pubspec.yaml
+
     - name: Get Dependencies
       run: flutter pub get
 
