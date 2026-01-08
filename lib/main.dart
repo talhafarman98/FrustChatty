@@ -6,7 +6,8 @@ import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:sqflite/sqflite.dart';
-import 'package:path/path.dart';
+// FIX: Added 'as p' to avoid conflict with BuildContext
+import 'package:path/path.dart' as p; 
 import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:path_provider/path_provider.dart';
@@ -125,7 +126,7 @@ class AppState extends ChangeNotifier {
   List<Message> currentMessages = [];
   
   // Global Settings
-  int accentColor = 0xFF7C4DFF; // Deep Purple Default (Better than simple blue)
+  int accentColor = 0xFF7C4DFF; // Deep Purple Default
   String fontFamily = 'Outfit';
   double globalFontSize = 16.0;
 
@@ -134,7 +135,8 @@ class AppState extends ChangeNotifier {
   Future<void> _initDB() async {
     final dbPath = await getDatabasesPath();
     _db = await openDatabase(
-      join(dbPath, 'frustchat_v2.db'),
+      // FIX: Used p.join instead of join
+      p.join(dbPath, 'frustchat_v2.db'),
       onCreate: (db, version) {
         db.execute('''CREATE TABLE contacts(
           id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, number TEXT, imagePath TEXT, 
@@ -143,9 +145,6 @@ class AppState extends ChangeNotifier {
         )''');
         db.execute('CREATE TABLE messages(id INTEGER PRIMARY KEY AUTOINCREMENT, contactId INTEGER, text TEXT, timestamp INTEGER, isDeleted INTEGER, mediaPath TEXT)');
         db.execute('CREATE TABLE settings(key TEXT PRIMARY KEY, value TEXT)');
-      },
-      onUpgrade: (db, oldVersion, newVersion) {
-         // Handle upgrades if needed
       },
       version: 2,
     );
@@ -208,8 +207,8 @@ class AppState extends ChangeNotifier {
       'customTransparency': transparency ?? c.customTransparency
     };
     await _db!.update('contacts', data, where: 'id = ?', whereArgs: [c.id]);
-    await loadContacts(); // Refresh list to update state if needed, though mostly visual
-    notifyListeners(); // Force rebuild
+    await loadContacts(); 
+    notifyListeners(); 
   }
 
   Future<void> loadMessages(int contactId) async {
@@ -225,7 +224,6 @@ class AppState extends ChangeNotifier {
     int time = DateTime.now().millisecondsSinceEpoch;
     await _db!.insert('messages', Message(contactId: contactId, text: text, timestamp: time, mediaPath: mediaPath).toMap());
     
-    // Update last message
     String preview = mediaPath != null ? "📷 Image" : text;
     await _db!.update('contacts', {'lastMessage': preview, 'lastMessageTime': time}, where: 'id = ?', whereArgs: [contactId]);
     
@@ -234,9 +232,7 @@ class AppState extends ChangeNotifier {
   }
 
   Future<void> deleteMessage(int msgId) async {
-    // Soft delete
     await _db!.update('messages', {'isDeleted': 1, 'text': 'This message is deleted'}, where: 'id = ?', whereArgs: [msgId]);
-    // Refresh
     final msg = currentMessages.firstWhere((m) => m.id == msgId);
     await loadMessages(msg.contactId);
   }
@@ -246,7 +242,6 @@ class AppState extends ChangeNotifier {
     try {
       final allContacts = await _db!.query('contacts');
       final allMessages = await _db!.query('messages');
-      // Note: We do NOT backup media files (images) to JSON as they are paths
       Map<String, dynamic> backup = {
         'contacts': allContacts,
         'messages': allMessages,
@@ -359,7 +354,7 @@ class HomeScreen extends StatelessWidget {
       body: Container(
         decoration: const BoxDecoration(
           image: DecorationImage(
-            image: NetworkImage("https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=1000&auto=format&fit=crop"), // Abstract Texture
+            image: NetworkImage("https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=1000&auto=format&fit=crop"), 
             fit: BoxFit.cover,
             opacity: 0.2
           ),
@@ -540,9 +535,9 @@ class _ChatScreenState extends State<ChatScreen> {
   void _sendFile(AppState state) async {
     final result = await FilePicker.platform.pickFiles(type: FileType.image);
     if (result != null) {
-       // Copy file to local storage so it persists
        final appDir = await getApplicationDocumentsDirectory();
-       final fileName = basename(result.files.single.path!);
+       // FIX: Used p.basename
+       final fileName = p.basename(result.files.single.path!);
        final savedImage = await File(result.files.single.path!).copy('${appDir.path}/$fileName');
        state.sendMessage(widget.contact.id!, "", mediaPath: savedImage.path);
        _scrollToBottom();
@@ -625,10 +620,8 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   Widget build(BuildContext context) {
     final state = context.watch<AppState>();
-    // Re-fetch contact to get updates
     final currentContact = state.contacts.firstWhere((c) => c.id == widget.contact.id, orElse: () => widget.contact);
     
-    // Background Logic
     BoxDecoration bgDeco = const BoxDecoration(color: Colors.black);
     if (currentContact.customBgPath != null && currentContact.customBgPath!.isNotEmpty) {
       bgDeco = BoxDecoration(
@@ -671,7 +664,7 @@ class _ChatScreenState extends State<ChatScreen> {
             Expanded(
               child: ListView.builder(
                 controller: _scrollCtx,
-                padding: const EdgeInsets.fromLTRB(16, 120, 16, 16), // Top padding for AppBar
+                padding: const EdgeInsets.fromLTRB(16, 120, 16, 16),
                 itemCount: state.currentMessages.length,
                 itemBuilder: (ctx, i) {
                   final msg = state.currentMessages[i];
@@ -746,7 +739,6 @@ class _ChatScreenState extends State<ChatScreen> {
                 },
               ),
             ),
-            // Input Area
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: BoxDecoration(
@@ -814,7 +806,8 @@ class _AddContactScreenState extends State<AddContactScreen> {
     final XFile? image = await ImagePicker().pickImage(source: ImageSource.gallery);
     if (image != null) {
       final appDir = await getApplicationDocumentsDirectory();
-      final fileName = basename(image.path);
+      // FIX: Used p.basename
+      final fileName = p.basename(image.path);
       final savedImage = await File(image.path).copy('${appDir.path}/$fileName');
       setState(() => _imagePath = savedImage.path);
     }
